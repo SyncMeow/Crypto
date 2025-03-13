@@ -1,4 +1,4 @@
-from numth import mod_inverse
+from libs.numth import mod_inverse
 
 PLAIN_FILE = "./files/plain.txt"
 CIPHER_FILE = "./files/cipher.txt"
