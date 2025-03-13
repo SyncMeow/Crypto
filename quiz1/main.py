@@ -2,4 +2,4 @@ from analyze import analyze
 from decrypt import decrypt
 from verify import check, compute
 
-decrypt(guess_idx=111)
+analyze(FILE="./cipher.txt", guess_idx=8964)

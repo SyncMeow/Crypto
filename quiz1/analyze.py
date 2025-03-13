@@ -6,7 +6,7 @@ def analyze(FILE = "./ciphertext.txt", SOLUTION = "./solution.json", sgl = 0, gu
     guess_idx: the index of the current guess
 
     """
-    cipher_word_cnt = [0 for i in range(256)]
+    cipher_word_cnt = [0 for i in range(1024)]
     total_cnt = 0
 
     with open(FILE, "r", encoding="utf-8") as f:
