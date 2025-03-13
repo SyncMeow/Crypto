@@ -1,25 +1,9 @@
 from libs.numth import mod_inverse
+from libs.io import read_file, write_file
 
 PLAIN_FILE = "./files/plain.txt"
 CIPHER_FILE = "./files/cipher.txt"
 ANSWER_FILE = "./files/answer.txt"
-
-def read_file(FILE):
-    with open(FILE, "r", encoding="utf-8") as r:
-        t = r.read(1)
-        res = t
-        
-        while t != "":
-            t = r.read(1)
-            res += t
-        
-        return res
-        
-def write_file(FILE, text):
-    with open(FILE, "w", encoding = "utf-8") as w:
-        for t in text: 
-            w.write(t)
-    return
 
 def affine_encrypt(text, a, b):
     """ y = (a*x + b) mod 95 + 32 """

@@ -1,21 +1,6 @@
-CIPHER_FILE = "./files/cipher.txt"
+from libs.io import read_file, write_file
 
-def read_file(FILE):
-    with open(FILE, "r", encoding="utf-8") as r:
-        t = r.read(1)
-        res = t
-        
-        while t != "":
-            t = r.read(1)
-            res += t
-        
-        return res
-        
-def write_file(FILE, text):
-    with open(FILE, "w", encoding = "utf-8") as w:
-        for t in text: 
-            w.write(t)
-    return
+CIPHER_FILE = "./files/cipher.txt"
 
 def analyze(text, cnt_table: dict, ordered_list: list[tuple[int, int, float]]): # cnt_table: {ord: cnt}  ordered_list: {ord, cnt, freq}
     table = {}
