@@ -1,30 +1,41 @@
 from libs.io import read_file, write_file
 from libs.basic import *
 
-PLAIN_FILE = "./files/plain.txt"
-CIPHER_FILE = "./files/cipher.txt"
-ANSWER_FILE = "./files/answer.txt"
+TARGET = 1
 
-toggle = 0
+PLAIN_FILE = f"./files/plain{TARGET}.txt"
+CIPHER_FILE = f"./files/cipher{TARGET}.txt"
+ANSWER_FILE = f"./files/answer{TARGET}.txt"
+
+toggle = 2
 
 if toggle == 0:
     plain = read_file(PLAIN_FILE)
-    cipher = caesar_cipher(plain, 11)
+    cipher = [caesar_cipher(t, 11) for t in plain]
     write_file(CIPHER_FILE, cipher)
-    answer = caesar_cipher(cipher, -11)
+    print(f"Encrypted {PLAIN_FILE} to {CIPHER_FILE}")
+
+    answer = [caesar_cipher(t, -11) for t in cipher]
     write_file(ANSWER_FILE, answer)
+    print(f"Decrypted {CIPHER_FILE} to {ANSWER_FILE}")
+
 
 elif toggle == 1:
     plain = read_file(PLAIN_FILE)
-    cipher = vigenere_cipher(plain, "WorldVanquisherIsCool")
+    cipher = [vigenere_cipher(t, "CryptographyEngineering") for t in plain]
     write_file(CIPHER_FILE, cipher)
-    answer = vigenere_cipher(cipher, "Crypto", enc=False)
+    print(f"Encrypted {PLAIN_FILE} to {CIPHER_FILE}")
+
+    answer = [vigenere_cipher(t, "CryptographyEngineering", enc=False) for t in cipher]
     write_file(ANSWER_FILE, answer)
-    
+    print(f"Decrypted {CIPHER_FILE} to {ANSWER_FILE}")
 
 elif toggle == 2:
     plain = read_file(PLAIN_FILE)
-    cipher = positional_xor(affine_encrypt(plain, 28, 93))
+    cipher = [positional_xor(affine_encrypt(t, 28, 93)) for t in plain]
     write_file(CIPHER_FILE, cipher)
-    answer = affine_decrypt(positional_xor(cipher), 28, 93)
+    print(f"Encrypted {PLAIN_FILE} to {CIPHER_FILE}")
+
+    answer = [affine_decrypt(positional_xor(t), 28, 93) for t in cipher]
     write_file(ANSWER_FILE, answer)
+    print(f"Decrypted {CIPHER_FILE} to {ANSWER_FILE}")
