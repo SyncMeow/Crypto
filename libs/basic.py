@@ -46,3 +46,24 @@ def caesar_cipher(text: str, key: int):
             processed += t
         
     return processed
+
+def vigenere_cipher(text: str, key: str, enc = True):
+    """
+    encryption: enc = True
+    decryption: enc = False
+    """
+    sgn = 1 if enc else -1
+
+    processed = ""
+    for i, t in enumerate(text):
+        idx = i if i < len(key) else i % len(key)
+        shift = ord(key[idx].lower()) - ord("a")
+
+        if ord("A") <= ord(t) and ord(t) <= ord("Z"):
+            processed += chr(ord("A") + (ord(t) - ord("A") + sgn*shift) % 26)
+        elif ord("a") <= ord(t) and ord(t) <= ord("z"):
+            processed += chr(ord("a") + (ord(t) - ord("a") + sgn*shift) % 26)
+        else:
+            processed += t
+        
+    return processed
