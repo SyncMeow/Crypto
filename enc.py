@@ -19,7 +19,6 @@ if toggle == 0:
     write_file(ANSWER_FILE, answer)
     print(f"Decrypted {CIPHER_FILE} to {ANSWER_FILE}")
 
-
 elif toggle == 1:
     plain = read_file(PLAIN_FILE)
     cipher = [vigenere_cipher(t, "CryptographyEngineering") for t in plain]
