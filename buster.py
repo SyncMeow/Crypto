@@ -1,6 +1,4 @@
 import requests
-import threading
-from queue import Queue
 from hashlib import sha1
 from libs.formatter import output_format1
 
@@ -42,7 +40,7 @@ if __name__ == "__main__":
 
     result_list = []
     for i in range(4):
-        print(f"Applying brute-force on z{target[i][1]}: {target[i][0]}\n")
+        print(f"Applying brute-force on {target[i][1]}: {target[i][0]}\n")
         result = sha1_brute_force(sec_list, target[i][0], result_list[0] if i == 3 else "")
         result_list.append(result)
         print()

@@ -1,6 +1,4 @@
 import requests
-import threading
-from queue import Queue
 from hashlib import sha1
 from libs.formatter import output_format1
 
