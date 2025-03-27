@@ -1,75 +1,133 @@
-import logging
+import multiprocessing as mp
 from hashlib import sha256
-from dotenv import load_dotenv
-import os
-from datetime import datetime
-import threading
-from queue import Queue
+import json
+import datetime
+import time
 
-logging.addLevelName(logging.ERROR, "EROR")
+record = {
+    str(i): {
+        "hash": "",
+        "cur_nonce": -1,
+        "time": None,
+        "tried_nonce": []
+    }
+    for i in range(1, 10)
+}
 
-log_format = '%(asctime)s [%(levelname)s] %(message)s'
 date_format = '%Y/%m/%d %H:%M:%S'
 
-logging.basicConfig(
-    level=logging.INFO,
-    format=log_format,
-    datefmt=date_format
-)
-logger = logging.getLogger(__name__)
+def get_utc_timestamp():
+    return time.mktime(datetime.datetime.now().timetuple())
 
-file_handler = logging.FileHandler("logger.log")
-file_handler.setFormatter(logging.Formatter(log_format, datefmt=date_format))
-logger.addHandler(file_handler)
+def log_message(msg: str, level: str = "INFO", timestamp: str = None):
+    if timestamp is None:
+        timestamp = datetime.datetime.now().strftime(date_format)
+    
+    print(f"{timestamp} [{level}] {msg}")
+    
+    with open("logger.log", "a", encoding="utf-8") as f:
+        f.write(f"{timestamp} [{level}] {msg}\n")
 
-def worker(block_hash: str, start_nonce: int, end_nonce: int, 
-               target_prefix: str, result_queue: Queue, stop_event: threading.Event):
-    nonce = start_nonce
-    while not stop_event.is_set() and nonce <= end_nonce:
+def logout():
+    with open("history_max.json", "r", encoding="utf-8") as r:
+        record = json.load(r)
+
+    block_hash = record["PreImage"]["hash"]
+    cur_time = record["PreImage"]["time"]
+    timestamp = datetime.datetime.fromtimestamp(cur_time).strftime(date_format)
+    log_message(f"[PreImage] {block_hash}", timestamp=timestamp)
+
+    for i in range(1, 10):
+        data = record[str(i)]
+        if data["time"] is not None:
+            timestamp = datetime.datetime.fromtimestamp(data["time"]).strftime(date_format) 
+        else:
+            continue
+        
+        if data["cur_nonce"] != -1:
+            block_hash = data["hash"]
+            log_message(
+                f"[Round {i} with nonce {hex(data['cur_nonce'])[2:]}] {block_hash}",
+                timestamp=timestamp
+            )
+        else:
+            if i != 9:
+                log_message(
+                    f"[Round {i} without nonce] {block_hash}",
+                    timestamp=timestamp
+                )
+            else:
+                log_message(
+                    f"[Round {i}] not found with running out of nonce",
+                    level="EROR",
+                    timestamp=timestamp
+                )
+
+def record_clean(round_number: int):
+    record[str(round_number)]["hash"] = ""
+    record[str(round_number)]["cur_nonce"] = -1
+    record[str(round_number)]["tried_nonce"] = []
+    record[str(round_number)]["time"] = None
+
+def worker(args: tuple[str, str, list[int], int, int]) -> tuple[int, str]:
+    block_hash, target_prefix, tried, start_nonce, end_nonce = args
+
+    for nonce in range(start_nonce, end_nonce + 1):
+        if nonce in tried: continue
+
         candidate = sha256((block_hash + hex(nonce)[2:]).encode()).hexdigest()
         if candidate.startswith(target_prefix):
-            result_queue.put((nonce, candidate))
-            stop_event.set()
-            return
-        nonce += 1
-        if nonce % 1000000 == 0:
-            #print(f"[Thread {threading.current_thread().name} with nonce {hex(nonce)[2:]}] {candidate[:10]}...")
+            return nonce, candidate
+        
+        if (nonce+1) % 10000000 == 0:
+            # print(f"[{mp.current_process().name} have done with {(100*(nonce - start_nonce)/(end_nonce - start_nonce)):.2f}%]")
             pass
 
-def parallel(block_hash: str, target_prefix: str, num_threads: int = 8) -> tuple[int, str]:
-    result_queue = Queue()
-    stop_event = threading.Event()
-    threads = []
-    
-    nonce_range = 0xffffffff
-    chunk_size = nonce_range // num_threads
-    
-    for i in range(num_threads):
-        start_nonce = i * chunk_size
-        end_nonce = start_nonce + chunk_size - 1 if i < num_threads - 1 else 0xffffffff
-        
-        t = threading.Thread(
-            target=worker,
-            args=(block_hash, start_nonce, end_nonce, target_prefix, result_queue, stop_event),
-            name=f"Miner-{i}"
-        )
-        threads.append(t)
-        t.start()
-    
-    for t in threads:
-        t.join()
-    
-    if not result_queue.empty():
-        return result_queue.get()
+    # print(f"[{mp.current_process().name} have done all the nonces")
     return None, None
 
+def parallel(round_number: int, block_hash: str, target_prefix: str) -> tuple[int, str]:
+    num_processes = mp.cpu_count()
+
+    with mp.Pool(processes=num_processes) as p:
+        nonce_range = 0xffffffff
+        chunk_size = nonce_range // num_processes
+        tried = record[str(round_number)]["tried_nonce"]
+
+        args_list = [
+            (block_hash, target_prefix, tried, i*chunk_size, (i+1)*chunk_size if i < num_processes - 1 else nonce_range)
+            for i in range(num_processes)
+        ]
+
+        for res in p.imap_unordered(worker, args_list):
+            if res[0] is not None:
+                p.terminate()
+                p.join()
+
+                record[str(round_number)]["hash"] = res[1]
+                record[str(round_number)]["cur_nonce"] = res[0]
+                record[str(round_number)]["tried_nonce"].append(res[0])
+                record[str(round_number)]["time"] = get_utc_timestamp()
+                
+                return res
+    
+    return None, None
+
+logout()
+
+"""
 if __name__ == "__main__":
-    load_dotenv()
-    student_id = os.getenv("STUDENT_ID")
+    student_id = "113550023"
+
     pre_image = sha256(student_id.encode()).hexdigest()
     block_hash = pre_image
 
-    logger.info(f"[PreImage] {block_hash[:10]}...")
+    record["PreImage"] = {
+        "hash": pre_image,
+        "time": get_utc_timestamp()
+    }
+    # logger.info(f"[PreImage] {block_hash}")
+    print(f"[PreImage] {block_hash}")
 
     start_digit = 0
     for i in range(len(student_id)):
@@ -77,22 +135,56 @@ if __name__ == "__main__":
             break
         start_digit = i + 1
 
-    logger.info(f"[Round 1 without nonce] {block_hash[:10]}...")
-    round_number = 2
+    round_number = 1
 
+    max_round = 0
     while start_digit < len(student_id):
         target_prefix = student_id[:start_digit + 1]
-        nonce, candidate = parallel(block_hash, target_prefix)
+
+        nonce, candidate = parallel(round_number, block_hash, target_prefix)
         
         if nonce is not None:
             block_hash = candidate
-            if nonce == 0:
-                logger.info(f"[Round {round_number} without nonce] {block_hash[:10]}...")
-            else:
-                logger.info(f"[Round {round_number} with nonce {hex(nonce)[2:]}] {block_hash[:10]}...")
+
+            # logger.info(f"[Round {round_number} with nonce {hex(nonce)[2:]}] {block_hash}")
+            print(f"[Round {round_number} with nonce {hex(nonce)[2:]}] {block_hash}")
+            max_round = max(max_round, round_number)
+
+            if round_number >= max_round:
+                with open("history_max.json", "w", encoding="utf-8") as w:
+                    json.dump(record, w)
+
             round_number += 1
             start_digit += 1
-        else:
-            logger.error(f"[Round {round_number}] not found with running out of nonce")
-            break
 
+            check_prefix = student_id[:start_digit + 1] 
+            while block_hash.startswith(check_prefix) and start_digit < len(student_id): 
+                start_digit += 1
+                if start_digit < len(student_id):
+                    record_clean(round_number)
+                    # logger.info(f"[Round {round_number} without nonce] {block_hash}")
+                    print(f"[Round {round_number} without nonce] {block_hash}")
+                    round_number += 1
+                    check_prefix = student_id[:start_digit + 1]
+        else:
+            # logger.error(f"[Round {round_number}] not found with running out of nonce")
+            print(f"[Round {round_number}] not found with running out of nonce")
+
+            if round_number == 1: 
+                break
+
+            print(f"Backtracking to round {round_number-1}")
+            round_number -= 1
+            start_digit -= 1
+            record_clean(round_number)
+            
+            while round_number > 1 and record[str(round_number-1)]["cur_nonce"] == -1:
+                print(f"Backtracking from round {round_number}")
+                round_number -= 1
+                start_digit -= 1
+                record_clean(round_number)
+
+            if round_number == 1: 
+                break
+    
+    logout()"""
