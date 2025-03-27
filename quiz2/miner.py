@@ -117,7 +117,7 @@ logout()
 
 """
 if __name__ == "__main__":
-    student_id = "113550023"
+    student_id = ""
 
     pre_image = sha256(student_id.encode()).hexdigest()
     block_hash = pre_image
