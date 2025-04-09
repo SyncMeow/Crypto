@@ -90,8 +90,7 @@ class Analyzer:
         for alpha in range(26):
             n = cnt_table[chr(ord("A") + alpha)]
             ic += n*(n-1)
-        if N <= 1:
-            return 0
+        
         return ic/(N*(N-1))
     
     def chi_square(self, freq_table, k):
@@ -132,12 +131,12 @@ class Analyzer:
         print(f"Decrypted file saved as {answer_dir}")
 
     def vigener_crack(self):
-        MAX_KEY_LEN = 30
+        MAX_KEY_LEN = 8
 
         print("=====performing vigener crack=====\n")
 
         key_res:tuple[int, float, float] = [0, 114514.0, 1919810.0]
-        for key_length in range(2, min(len(self.cipher), MAX_KEY_LEN)):
+        for key_length in range(2, MAX_KEY_LEN):
             avg_ic = 0.0
             grouped = self.group(key_length)
             
@@ -212,10 +211,9 @@ class Analyzer:
         print(f"Chart saved as {chart_dir}\n")
         
 if __name__ == "__main__":
-    analyzer = Analyzer("files/cipher1.txt")
+    analyzer = Analyzer("problem3Ciphertext.txt")
 
     analyzer.load()
     analyzer.analyze()
-
     analyzer.vigener_crack()
     
