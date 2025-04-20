@@ -1,13 +1,17 @@
-from libs.io import read_file, write_file
+from libs.io import read_file, write_file, abs_dir
 from libs.basic import *
+import os
 
 class Crypto:
     def __init__(self):
         pass
         
-    def encrypt(self, s: str):
-        s = rm_punc(rm_space(s))
-        key = ""
+    def encrypt(self, s: str, key: str):
+        s = rm_space(s)
+        s = rm_punc(s)
+
+        print("===== Performing Encryption =====\n")
+        if not key: key = "AADEADAIAIHAZ"
         for i in range(5):
             print(f"Round {i+1} key: {key}")
 
@@ -15,55 +19,20 @@ class Crypto:
             s = transposition_cipher(s, 9, "924637815")
             key = transposition_cipher(key, 9, "491753286")
 
-            print(f"ciphertext: {s}")
+            print(f"ciphertext: {s[:20]}...\n")
 
-        s = permutate(s, 5, 10)
+        s = formatting(s, 5, 10)
         return s
 
-TARGET = 1
+if __name__ == "__main__":
 
-PLAIN_FILE = f"./files/plain{TARGET}.txt"
-CIPHER_FILE = f"./files/cipher{TARGET}.txt"
-ANSWER_FILE = f"./files/answer{TARGET}.txt"
+    target = int(input("target: "))
+    PLAIN_FILE = abs_dir(__file__, f"./files/plain{target}.txt")
+    CIPHER_FILE = abs_dir(__file__, f"./files/cipher{target}.txt")
+    ANSWER_FILE = abs_dir(__file__, f"./files/answer{target}.txt")
 
-toggle = 3
-
-if toggle == 0:
-    plain = read_file(PLAIN_FILE)
-    cipher = [caesar_cipher(t, 11) for t in plain]
-    write_file(CIPHER_FILE, cipher)
-    print(f"Encrypted {PLAIN_FILE} to {CIPHER_FILE}")
-
-    answer = [caesar_cipher(t, -11) for t in cipher]
-    write_file(ANSWER_FILE, answer)
-    print(f"Decrypted {CIPHER_FILE} to {ANSWER_FILE}")
-
-elif toggle == 1:
-    plain = read_file(PLAIN_FILE)
-    cipher = permutate(vigenere_cipher(rm_space("".join(plain)), "CryptographyEngineering"), 5, 10)
-    write_file(CIPHER_FILE, cipher)
-    print(f"Encrypted {PLAIN_FILE} to {CIPHER_FILE}")
-
-    answer = vigenere_cipher(rm_space(cipher), "CryptographyEngineering", enc=False)
-    write_file(ANSWER_FILE, answer)
-    print(f"Decrypted {CIPHER_FILE} to {ANSWER_FILE}")
-
-elif toggle == 2:
-    plain = read_file(PLAIN_FILE)
-    cipher = [positional_xor(affine_encrypt(t, 28, 93)) for t in plain]
-    write_file(CIPHER_FILE, cipher)
-    print(f"Encrypted {PLAIN_FILE} to {CIPHER_FILE}")
-
-    answer = [affine_decrypt(positional_xor(t), 28, 93) for t in cipher]
-    write_file(ANSWER_FILE, answer)
-    print(f"Decrypted {CIPHER_FILE} to {ANSWER_FILE}")
-
-elif toggle == 3:
     crypto = Crypto()
-
-    plain = read_file(PLAIN_FILE)
-    plain = "".join(plain)
-    cipher = crypto.encrypt(plain)
-    write_file(CIPHER_FILE, cipher)
-
-    print(f"Encrypted {PLAIN_FILE} to {CIPHER_FILE}")
+    print(f"Read plaintext from plain{target}.txt\n")
+    plaintext = read_file(PLAIN_FILE)
+    ciphertext = crypto.encrypt(plaintext, "AADEADAIAIHAZ")
+    

@@ -22,7 +22,7 @@ def decrypt(ciphertext_hex: str, key: str, salt: bytes = b'') -> str:
 
 if __name__ == "__main__":
     password = "NYCU"
-    message = "My dad got MVP!"
+    message = "Bang Dream it's MyGO!!!!!"
     salt = b'1145141919810'
 
     print("Password:", password)

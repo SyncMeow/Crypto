@@ -74,8 +74,10 @@ def vigenere_cipher(text: str, key: str, enc=True):
 def transposition_cipher(text: str, key_len: int, key: str):
     """
     key_len: n
-    key: str of a permutation of 1~n
+    key: str consisted of alphabets
     """
+
+    
 
     def find_index(x):
         for i in range(key_len):
@@ -110,7 +112,7 @@ def rm_punc(text: str):
 def rm_space(text: str):
     return "".join(text.split())
 
-def permutate(text: str, group: int, col: int):
+def formatting(text: str, group: int, col: int):
     res = ""
 
     col_cnt = 0

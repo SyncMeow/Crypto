@@ -73,9 +73,10 @@ def worker(args: tuple[str, str, list[int], int, int]) -> tuple[int, str]:
     block_hash, target_prefix, tried, start_nonce, end_nonce = args
 
     for nonce in range(start_nonce, end_nonce + 1):
-        if nonce in tried: continue
+        nonce_str = f"{nonce:08x}"
+        if nonce_str in tried: continue
 
-        candidate = sha256((block_hash + hex(nonce)[2:]).encode()).hexdigest()
+        candidate = sha256((block_hash + nonce_str).encode()).hexdigest()
         if candidate.startswith(target_prefix):
             return nonce, candidate
         
@@ -113,11 +114,13 @@ def parallel(round_number: int, block_hash: str, target_prefix: str) -> tuple[in
     
     return None, None
 
-logout()
-
-"""
 if __name__ == "__main__":
-    student_id = ""
+    logout()
+    
+    """
+
+
+    student_id = "113550023"
 
     pre_image = sha256(student_id.encode()).hexdigest()
     block_hash = pre_image
@@ -136,6 +139,9 @@ if __name__ == "__main__":
         start_digit = i + 1
 
     round_number = 1
+
+    with open("history_max.json", "w", encoding="utf-8") as w:
+        json.dump(record, w)
 
     max_round = 0
     while start_digit < len(student_id):

@@ -2,3 +2,8 @@ __pycache__
 quiz1/answer
 files
 .env
+
+__*
+_*
+.txt
+.log
